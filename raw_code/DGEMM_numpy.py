@@ -8,8 +8,11 @@ repetitions = 10
 
 # Loop through each matrix size
 for size in matrix_sizes:
+
+    results = []
+
     for a in range(repetitions):
-        results = []
+        
 
         # Generate random matrices
         matrix_a = np.random.rand(size, size)
@@ -27,4 +30,4 @@ for size in matrix_sizes:
     df = pd.DataFrame(results)
     df.to_csv(f"./results_python_numpy_{size}.csv", index=False)
 
-    print(f"End of N: {size}, Run: {a}, Time: {end_time - start_time:.6f} s")
+    print(f"End of N: {size}, Run: {a}, Time: {end_time - start_time} s")
