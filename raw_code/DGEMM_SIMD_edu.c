@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+// Para poder usar _aligned_malloc, e assim funcionar com instruções AVX
+#include <malloc.h>
+
 // Solução para o problema de compatibilidade de Windows
 #ifdef _WIN32
 #include <windows.h>
@@ -15,13 +18,10 @@ int clock_gettime(int dummy, struct timespec* ts) {
     ts->tv_nsec = (long)((count.QuadPart % freq.QuadPart) * 1e9 / freq.QuadPart);
     return 0;
 }
-#define CLOCK_MONOTONIC 0
-#endif
-
-// Para poder usar _aligned_malloc, e assim funcionar com instruções AVX
-#include <malloc.h>
 #define _aligned_malloc(size, alignment) __mingw_aligned_malloc(size, alignment)
 #define _aligned_free(ptr) __mingw_aligned_free(ptr)
+#define CLOCK_MONOTONIC 0
+#endif
 
 #include <x86intrin.h>
 void dgemm(int n, double* A, double* B, double* C) {
