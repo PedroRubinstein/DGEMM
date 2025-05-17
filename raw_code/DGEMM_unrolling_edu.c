@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+// Para poder usar _aligned_malloc, e assim funcionar com instruções AVX
+#include <malloc.h>
+
 // Solução para o problema de compatibilidade de Windows
 #ifdef _WIN32
 #include <windows.h>
@@ -15,17 +18,37 @@ int clock_gettime(int dummy, struct timespec* ts) {
     ts->tv_nsec = (long)((count.QuadPart % freq.QuadPart) * 1e9 / freq.QuadPart);
     return 0;
 }
+#define _aligned_malloc(size, alignment) __mingw_aligned_malloc(size, alignment)
+#define _aligned_free(ptr) __mingw_aligned_free(ptr)
 #define CLOCK_MONOTONIC 0
 #endif
 
+#include <x86intrin.h>
+#define UNROLL (4)
 void dgemm(int n, double* A, double* B, double* C) {
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            double cij = 0.0;
-            for (int k = 0; k < n; k++) {
-                cij += A[i * n + k] * B[k * n + j];
+    for (size_t i = 0; i < n; i += UNROLL*4) {
+        for (size_t j = 0; j < n; j++) {
+            __m256d c[4];
+            for (size_t x = 0; x < UNROLL; x++) {
+                c[x] = _mm256_load_pd(C+i+x*4+j*n);
             }
-            C[i * n + j] = cij;
+
+            for (size_t k = 0; k < n; k++) {
+                __m256d b = _mm256_broadcast_sd(B+k+j*n);
+                for (size_t x = 0; x < UNROLL; x++) {
+                    c[x] = _mm256_add_pd(
+                        c[x],
+                        _mm256_mul_pd(
+                            _mm256_load_pd(A+n*k+x*4+i),
+                            b
+                        )
+                    );
+                }
+            }
+
+            for (size_t x = 0; x < UNROLL; x++) {
+                _mm256_store_pd(C+i+x*4+j*n, c[x]);
+            }
         }
     }
 }
@@ -45,7 +68,7 @@ void save_to_csv(int size, double* times, int repetitions) {
 }
 
 int main() {
-    int matrix_sizes[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192}; // Define matrix sizes
+    int matrix_sizes[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192}; // Define matrix sizes. O 2, que não é divisível por 4, quebra o paralelismo de subpalavra. 4 e 8, que não são divisíveis por 16, quebram o loop unrolling.
     int repetitions = 10;
 
     for (int s = 0; s < sizeof(matrix_sizes) / sizeof(matrix_sizes[0]); s++) {
@@ -53,10 +76,11 @@ int main() {
         double* times = (double*)malloc(repetitions * sizeof(double));
 
         for (int r = 0; r < repetitions; r++) {
-            double* A = (double*) malloc(size * size * sizeof(double));
-            double* B = (double*) malloc(size * size * sizeof(double));
-            double* C = (double*) calloc(size * size, sizeof(double));
-
+            // Substituí malloc por _aligned_malloc, para funcionar com instruções AVX
+            double* A = (double*) _aligned_malloc(size * size * sizeof(double), 32);
+            double* B = (double*) _aligned_malloc(size * size * sizeof(double), 32);
+            double* C = (double*) _aligned_malloc(size * size * sizeof(double), 32);
+            
             srand(time(NULL));
             for (int i = 0; i < size * size; i++) {
                 A[i] = (double) rand() / RAND_MAX;
@@ -72,9 +96,10 @@ int main() {
             times[r] = time_taken;
             printf("Matrix Size: %d, Run: %d, Time Taken: %.9f s\n", size, r, time_taken);
 
-            free(A);
-            free(B);
-            free(C);
+            // Como dei _aligned_malloc, preciso dar _aligned_free
+            _aligned_free(A);
+            _aligned_free(B);
+            _aligned_free(C);            
         }
         save_to_csv(size, times, repetitions);
         free(times);
