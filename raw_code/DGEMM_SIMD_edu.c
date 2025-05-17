@@ -58,7 +58,7 @@ void save_to_csv(int size, double* times, int repetitions) {
 }
 
 int main() {
-    int matrix_sizes[] = {4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192}; // Define matrix sizes. Tirei o 2, que não é divisível por 4
+    int matrix_sizes[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192}; // Define matrix sizes. Tirei o 2, que não é divisível por 4
     int repetitions = 10;
 
     for (int s = 0; s < sizeof(matrix_sizes) / sizeof(matrix_sizes[0]); s++) {
