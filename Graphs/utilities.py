@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from math import log10
 
 class Data:
     def __init__(self, values, label):
         'Cada objeto Data representa todos os dados para um tamanho específico de matriz'
-        self.values = values
+        self.values = [x for x in values]
         self.label = label
 
-def make_figure(data_list, categories, figsize, barwidth, fontsize_x, fontsize_y, fontsize_legend, title, filename):
+def make_figure(data_list, categories, figsize, barwidth, fontsize_x, fontsize_y, fontsize_legend, title, filename, log_scale=False):
     # data_list é uma lista de objetos Data
     assert len(data_list) > 0
 
@@ -15,6 +16,7 @@ def make_figure(data_list, categories, figsize, barwidth, fontsize_x, fontsize_y
     fig, ax = plt.subplots(figsize=figsize, layout='constrained')
     plt.xticks(fontsize=fontsize_x)
     plt.yticks(fontsize=fontsize_y)
+    if log_scale: ax.set_yscale('log')
 
     # Determinar posições das barras de cada tamanho de matriz
     first_data = data_list[0]

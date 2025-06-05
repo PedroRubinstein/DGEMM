@@ -26,4 +26,4 @@ for data in data_list:
 
     relative_data_list.append(Data(values, data.label))
     
-make_figure(relative_data_list, categories, figsize, barwidth, fontsize_x, fontsize_y, fontsize_legend, 'Performance (relativa ao C)', 'PerformanceRelativaC')
+make_figure(relative_data_list, categories, figsize, barwidth, fontsize_x, fontsize_y, fontsize_legend, 'Performance relativa ao C', 'PerformanceRelativaCLog', log_scale=True)
