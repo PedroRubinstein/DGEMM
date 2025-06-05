@@ -19,14 +19,16 @@ data_list = [
     Data((173900, 7250, 1757, 431.6, 56.63), '8192x8192')
 ]
 
-make_figure(data_list, categories, figsize, barwidth, fontsize_x, fontsize_y, fontsize_legend, 'Tempo de execução', 'TempoNovo')
+#log_data_list = [data.to_log() for data in data_list]
 
+make_figure(data_list, categories, figsize, barwidth, fontsize_x, fontsize_y, fontsize_legend, 'Tempo de execução (segundos)', 'TempoLog', log_scale=True)
 
 # Figura da performance
 relative_data_list = []
 for data in data_list:
     values = [data.values[0]/data.values[i] for i in range(len(data.values))] # Tempo do Python dividido pelo tempo do tamanho de matriz em questão
 
-    relative_data_list.append(Data(values, data.label))
+    new_data = Data(values, data.label)
+    relative_data_list.append(new_data)
     
-make_figure(relative_data_list, categories, figsize, barwidth, fontsize_x, fontsize_y, fontsize_legend, 'Performance (relativa ao Python)', 'PerformanceNovo')
+make_figure(relative_data_list, categories, figsize, barwidth, fontsize_x, fontsize_y, fontsize_legend, 'Performance relativa ao Python', 'PerformanceLog', log_scale=True)
