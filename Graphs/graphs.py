@@ -10,7 +10,7 @@ categories = ['Python', 'C', 'SIMD', 'Unrolling', 'Blocking']
 
 # Ler dados (no C, peguei o -O3)
 
-placeholder_python = 200000
+placeholder_python = 173900 # Agora é o dado certo! Não mais placeholder
 
 data_list = [
     Data((3.69, 0.00682, 0.00218, 0.00129, 0.00108), '256x256'),
